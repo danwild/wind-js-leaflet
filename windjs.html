@@ -49,12 +49,14 @@
                 window.clearTimeout( timer );
 
             timer = setTimeout(function() { //showing wind is delayed
+
                 var bounds = map.getBounds();
                 var size = map.getSize();
 
-                /*context.rect(0,0,3000,3000);
-                 context.fillStyle = "red";
-                 context.fill();*/
+                // fade in..
+//                context.rect(0,0,3000,3000);
+//                context.fillStyle = "grey";
+//                context.fill();
 
                 windy.start( [[0,0],[size.x, size.y]], size.x, size.y,
                         [[bounds._southWest.lng, bounds._southWest.lat ],[bounds._northEast.lng, bounds._northEast.lat]] );
