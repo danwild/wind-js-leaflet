@@ -6,6 +6,11 @@
 </head>
 <body>
 
+	<div id="heading">
+		<h1>WindJS Leaflet Demo</h1>
+		<p><a href="https://github.com/danwild/wind-js-leaflet">https://github.com/danwild/wind-js-leaflet</a></p>
+	</div>
+
     <div id="map"></div>
 
     <!--leaflet-->
@@ -24,7 +29,7 @@
         console.log(data);
 
         var timer = null;
-        var map = L.map('map').setView([50.00, 14.44], 3);
+        var map = L.map('map').setView([-26.00, 135], 3);
         L.tileLayer(
                 "http://{s}.sm.mapstack.stamen.com/" +
                 "(toner-lite,$fff[difference],$fff[@23],$fff[hsl-saturation@20])/" +
