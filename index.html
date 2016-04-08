@@ -1,84 +1,97 @@
 <!doctype html>
 <html>
 <head>
-    <title>WindJS (ESRI) Leaflet Demo</title>
-    <meta charset="utf-8">
+	<title>WindJS (ESRI) Leaflet Demo</title>
+	<meta charset="utf-8">
 </head>
 <body>
 
-	<div id="heading">
-		<h1>WindJS Leaflet Demo</h1>
-		<p><a href="https://github.com/danwild/wind-js-leaflet">https://github.com/danwild/wind-js-leaflet</a></p>
-	</div>
+<div id="map"></div>
 
-    <div id="map"></div>
+<!--leaflet-->
+<link rel="stylesheet" href="leaflet/leaflet.css" />
+<script src="leaflet/leaflet.js"></script>
+<script src="resource/L.CanvasOverlay.js"></script>
 
-    <!--leaflet-->
-    <link rel="stylesheet" href="leaflet/leaflet.css" />
-    <script src="leaflet/leaflet.js"></script>
-    <script src="resource/L.CanvasOverlay.js"></script>
+<!--other-->
+<link rel="stylesheet" href="resource/demo.css" />
+<script src="resource/windy.js"></script>
 
-    <!--other-->
-    <link rel="stylesheet" href="resource/demo.css" />
-    <script src="resource/windy.js"></script>
-    <script src="resource/gfs.js"></script>
+<script src="https://code.jquery.com/jquery-2.2.3.min.js" integrity="sha256-a23g1Nt4dtEYOj7bR+vTu7+T8VP13humZFBJNIYoEJo=" crossorigin="anonymous"></script>
 
-    <script>
+<script>
 
-        console.log('data');
-        console.log(data);
+	var data;
 
-        var timer = null;
-        var map = L.map('map').setView([-26.00, 135], 3);
-        L.tileLayer(
-                "http://{s}.sm.mapstack.stamen.com/" +
-                "(toner-lite,$fff[difference],$fff[@23],$fff[hsl-saturation@20])/" +
-                "{z}/{x}/{y}.png"
-        ).addTo(map);
+	$.get("http://nawth.io:7000/latest", function(data, status){
 
-        //Add CanvasLayer to the map
-        canvasOverlay = L.canvasOverlay()
-                .drawing(redraw)
-                .addTo(map);
+		if(status == 200){
+			data = data;
+		}
 
-        //windy object
-        windy = new Windy({canvas: canvasOverlay.canvas(), data: data});
+		// use static
+		else {
+			$.get("resource/static.json", function(data, status){
+				data = data;
+			});
+		}
 
-        //prepare context global var
-        context = canvasOverlay.canvas().getContext('2d');
+	});
 
-        //start drawing wind map
-        function redraw(overlay, params) {
+	console.log('data');
+	console.log(data);
 
-            if( timer )
-                window.clearTimeout( timer );
+	var timer = null;
+	var map = L.map('map').setView([50.00, 14.44], 3);
+	L.tileLayer(
+			"http://{s}.sm.mapstack.stamen.com/" +
+			"(toner-lite,$fff[difference],$fff[@23],$fff[hsl-saturation@20])/" +
+			"{z}/{x}/{y}.png"
+	).addTo(map);
 
-            timer = setTimeout(function() { //showing wind is delayed
+	//Add CanvasLayer to the map
+	canvasOverlay = L.canvasOverlay()
+			.drawing(redraw)
+			.addTo(map);
 
-                var bounds = map.getBounds();
-                var size = map.getSize();
+	//windy object
+	windy = new Windy({canvas: canvasOverlay.canvas(), data: data});
 
-                // fade in..
+	//prepare context global var
+	context = canvasOverlay.canvas().getContext('2d');
+
+	//start drawing wind map
+	function redraw(overlay, params) {
+
+		if( timer )
+			window.clearTimeout( timer );
+
+		timer = setTimeout(function() { //showing wind is delayed
+
+			var bounds = map.getBounds();
+			var size = map.getSize();
+
+			// fade in..
 //                context.rect(0,0,3000,3000);
 //                context.fillStyle = "grey";
 //                context.fill();
 
-                windy.start( [[0,0],[size.x, size.y]], size.x, size.y,
-                        [[bounds._southWest.lng, bounds._southWest.lat ],[bounds._northEast.lng, bounds._northEast.lat]] );
-            },750)
+			windy.start( [[0,0],[size.x, size.y]], size.x, size.y,
+					[[bounds._southWest.lng, bounds._southWest.lat ],[bounds._northEast.lng, bounds._northEast.lat]] );
+		},750)
 
-        }
+	}
 
-        // clear canvas and stop animation
-        function clearWind() {
-            windy.stop();
-            context.clearRect(0, 0, 3000, 3000);
-        }
+	// clear canvas and stop animation
+	function clearWind() {
+		windy.stop();
+		context.clearRect(0, 0, 3000, 3000);
+	}
 
-        map.on('dragstart', function() { clearWind() });
-        map.on('zoomstart', function() { clearWind() });
-        map.on('resize', function() { clearWind() });
+	map.on('dragstart', function() { clearWind() });
+	map.on('zoomstart', function() { clearWind() });
+	map.on('resize', function() { clearWind() });
 
-    </script>
+</script>
 </body>
 </html>
