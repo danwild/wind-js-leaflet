@@ -26,12 +26,15 @@
 	$.get("http://nawth.io:7000/latest", function(data, status){
 
 		if(status == 200 || 304){
+			console.log(status);
+			console.log(data);
 			data = data;
 		}
 
 		// use static
 		else {
 			$.get("resource/static.json", function(data, status){
+				console.log(data);
 				data = data.data;
 			});
 		}
