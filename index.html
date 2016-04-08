@@ -21,31 +21,27 @@
 
 <script>
 
-	var data;
-
 	$.get("http://nawth.io:7000/latest", function(data, status){
 
 		if(status == 'success'){
 			console.log(status);
 			console.log(data);
-			data = data[0];
 
-			init();
+			init(data);
 		}
 
 		// use static
 		else {
 			$.get("resource/static.json", function(data, status){
 				console.log(data);
-				data = data;
 
-				init();
+				init(data);
 			});
 		}
 
 	});
 
-	function init(){
+	function init(data){
 
 		console.log('data');
 		console.log(data);
