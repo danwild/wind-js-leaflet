@@ -37,7 +37,7 @@
 
 		// use static
 		else {
-			$.get("resource/static.json", function(data, status){
+			$.getJSON("resource/static.json", function(data){
 				console.log(data);
 
 				init(data);
