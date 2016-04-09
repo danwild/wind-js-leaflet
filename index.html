@@ -26,25 +26,19 @@
 
 <script>
 
-	$.get("http://nawth.io:7000/latest", function(data, status){
-
-		if(status == 'success'){
-			console.log(status);
-			console.log(data);
-
-			init(data);
-		}
-
-		// use static
-		else {
-			$.getJSON("resource/static.json", function(data){
-				console.log(data);
-
-				init(data);
-			});
-		}
-
-	});
+    // see if service is running, or use static
+    $.ajax({
+        url: 'http://nawth.io:7000/latest',
+        success: function(data){
+            init(data);
+        },
+        error: function( ){
+            $.getJSON('resource/static.json', function (data) {
+                init(data);
+            });
+        },
+        timeout: 2000
+    });
 
 	function init(data){
 
