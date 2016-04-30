@@ -28,15 +28,15 @@
 //		url: 'http://localhost:7000/latest',
         url: 'http://nawth.io:7000/latest',
         success: function(data){
-			console.log(data);
             init(data);
         },
         error: function( ){
             $.getJSON('resource/static.json', function (data) {
+                console.log('falling back to static data..');
                 init(data);
             });
         },
-        timeout: 2000
+        timeout: 5000
     });
 
 	function init(data){
