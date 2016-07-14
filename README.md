@@ -21,22 +21,23 @@ Prior to loading `wind-js-leaflet`, you need to load:
 
 ## Options
 ```
-	localMode: true                                     // use a local data file to test before hitting a real wind-js-server
-	map: map,                                           // ref to your leaflet Map
-	layerControl: layerControl,                         // ref to your leaflet layer control
-	useNearest: false,                                  // get nearest data to your ISO time string
-	timeISO: null,                                      // your ISO time string, falls back to current time (can also use WindJsLeaflet.setTime(time))
-	nearestDaysLimit: 7,                                // the maximum range (±) to look for data 
-	displayValues: true,                                // whether or not to add a mouseover control to display values
-	displayOptions: {
-	   displayPosition: 'bottomleft',                   // leaflet control position
-	   displayEmptyString: 'No wind data'               // what to display in mouseover control when no data
-	},
-	overlayName: 'wind',                                // string to display for the overlay in your layer control
-	pingUrl: 'http://144.6.233.100:7000/alive/',        // url to check service availability
-	latestUrl: 'http://144.6.233.100:7000/latest/',     // url to get latest data with no required params   
-	nearestUrl: 'http://144.6.233.100:7000/nearest/',   // url to get data nearest a specified time ISO
-	errorCallback: handleError                          // callback function to get called on error
+javascript
+localMode: true                                     // use a local data file to test before hitting a real wind-js-server
+map: map,                                           // ref to your leaflet Map
+layerControl: layerControl,                         // ref to your leaflet layer control
+useNearest: false,                                  // get nearest data to your ISO time string
+timeISO: null,                                      // your ISO time string, falls back to current time (can also use WindJsLeaflet.setTime(time))
+nearestDaysLimit: 7,                                // the maximum range (±) to look for data 
+displayValues: true,                                // whether or not to add a mouseover control to display values
+displayOptions: {
+   displayPosition: 'bottomleft',                   // leaflet control position
+   displayEmptyString: 'No wind data'               // what to display in mouseover control when no data
+},
+overlayName: 'wind',                                // string to display for the overlay in your layer control
+pingUrl: 'http://144.6.233.100:7000/alive/',        // url to check service availability
+latestUrl: 'http://144.6.233.100:7000/latest/',     // url to get latest data with no required params   
+nearestUrl: 'http://144.6.233.100:7000/nearest/',   // url to get data nearest a specified time ISO
+errorCallback: handleError                          // callback function to get called on error
 ```
 
 ## Reference
