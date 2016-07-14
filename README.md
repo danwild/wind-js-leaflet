@@ -20,8 +20,7 @@ Prior to loading `wind-js-leaflet`, you need to load:
 - [jQuery](https://jquery.com/)
 
 ## Options
-```
-javascript
+```javascript
 localMode: true                                     // use a local data file to test before hitting a real wind-js-server
 map: map,                                           // ref to your leaflet Map
 layerControl: layerControl,                         // ref to your leaflet layer control
