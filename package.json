@@ -22,5 +22,8 @@
   "bugs": {
     "url": "https://github.com/danwild/wind-js-leaflet/issues"
   },
-  "homepage": "https://github.com/danwild/wind-js-leaflet#readme"
+  "homepage": "https://github.com/danwild/wind-js-leaflet#readme",
+  "dependencies": {
+    "wind-js-leaflet": "0.0.1"
+  }
 }
