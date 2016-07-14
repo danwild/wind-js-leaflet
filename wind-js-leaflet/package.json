@@ -1,0 +1,48 @@
+{
+  "name": "wind-js-leaflet",
+  "version": "0.0.1",
+  "description": "Leaflet plugin to add WindJS data visualisation overlay",
+  "main": "dist/wind-js-leaflet.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/danwild/wind-js-leaflet.git"
+  },
+  "keywords": [
+    "leaflet",
+    "wind",
+    "canvas",
+    "noaa",
+    "visualisation",
+    "overlay"
+  ],
+  "author": {
+    "name": "danwild@y7mail.com"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/danwild/wind-js-leaflet/issues"
+  },
+  "homepage": "https://github.com/danwild/wind-js-leaflet#readme",
+  "dependencies": {
+    "leafletjs-canvas-overlay": "^1.0.0"
+  },
+  "devDependencies": {
+    "babel-preset-es2015": "^6.9.0",
+    "gulp": "^3.9.1",
+    "gulp-babel": "^6.1.2",
+    "gulp-concat": "^2.6.0",
+    "gulp-concat-css": "^2.3.0",
+    "gulp-cssnano": "^2.1.2",
+    "gulp-rename": "^1.2.2",
+    "gulp-uglify": "^1.5.4"
+  },
+  "readme": "# wind-js-leaflet\nA plugin for Leaflet to add visualisation overlay of wind direction and velocity, and temperature.\nTo use this plugin, you will need to run your own [wind-js-server](https://github.com/danwild/wind-js-server) instance.\nThe data is 1 degree, 6 hourly data from [NOAA](http://nomads.ncep.noaa.gov/).\n\n## Install\n\n### Basic\nDownload zip and include `dist/wind-js-leaflet.js` and `dist/wind-js-leaflet.css` files using resource tags.\n\n### npm\n`npm install wind-js-leaflet`\n\n## Use\nDemo use here: http://danwild.github.io/wind-js-leaflet/\n\n## Dependencies\nPrior to loading `wind-js-leaflet`, you need to load:\n- [Leaflet](leafletjs.com)\n- [jQuery](https://jquery.com/)\n\n## Options\n```\n\tlocalMode: true                                     // use a local data file to test before hitting a real wind-js-server\n\tmap: map,                                           // ref to your leaflet Map\n\tlayerControl: layerControl,                         // ref to your leaflet layer control\n\tuseNearest: false,                                  // get nearest data to your ISO time string\n\ttimeISO: null,                                      // your ISO time string, falls back to current time (can also use WindJsLeaflet.setTime(time))\n\tnearestDaysLimit: 7,                                // the maximum range (±) to look for data \n\tdisplayValues: true,                                // whether or not to add a mouseover control to display values\n\tdisplayOptions: {\n\t   displayPosition: 'bottomleft',                   // leaflet control position\n\t   displayEmptyString: 'No wind data'               // what to display in mouseover control when no data\n\t},\n\toverlayName: 'wind',                                // string to display for the overlay in your layer control\n\tpingUrl: 'http://144.6.233.100:7000/alive/',        // url to check service availability\n\tlatestUrl: 'http://144.6.233.100:7000/latest/',     // url to get latest data with no required params   \n\tnearestUrl: 'http://144.6.233.100:7000/nearest/',   // url to get data nearest a specified time ISO\n\terrorCallback: handleError                          // callback function to get called on error\n```\n\n## Reference\n`wind-js-leaflet` is possible because of things like:\n- [L.CanvasOverlay.js](https://gist.github.com/Sumbera/11114288)\n- [grib2json](https://github.com/cambecc/grib2json)\n- [earth](https://github.com/cambecc/earth)\n- [WindJS](https://github.com/Esri/wind-js)",
+  "readmeFilename": "README.md",
+  "gitHead": "30890892b6960fe4b936951ae807828f33215196",
+  "_id": "wind-js-leaflet@0.0.1",
+  "_shasum": "32db0de990551bc82b5a41f774c2bbd4e0e32143",
+  "_from": "wind-js-leaflet@*"
+}
