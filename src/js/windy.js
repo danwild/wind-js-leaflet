@@ -12,7 +12,7 @@
 
 var Windy = function (params) {
 
-	const VELOCITY_SCALE = 0.003 * (Math.pow(window.devicePixelRatio,1/3) || 1); // scale for wind velocity (completely arbitrary--this value looks nice)
+	const VELOCITY_SCALE = 0.005 * (Math.pow(window.devicePixelRatio,1/3) || 1); // scale for wind velocity (completely arbitrary--this value looks nice)
 	const MIN_TEMPERATURE_K = 261.15;                                            // step size of particle intensity color scale
 	const MAX_TEMPERATURE_K = 317.15;                                            // wind velocity at which particle intensity is maximum (m/s)
 	const MAX_PARTICLE_AGE = 90;                                                 // max number of frames a particle is drawn before regeneration
@@ -124,7 +124,7 @@ var Windy = function (params) {
 	 */
 	var isValue = function (x) {
 		return x !== null && x !== undefined;
-	}
+	};
 
 	/**
 	 * @returns {Number} returns remainder of floored division, i.e., floor(a / n). Useful for consistent modulo
@@ -132,14 +132,14 @@ var Windy = function (params) {
 	 */
 	var floorMod = function (a, n) {
 		return a - n * Math.floor(a / n);
-	}
+	};
 
 	/**
 	 * @returns {Number} the value x clamped to the range [low, high].
 	 */
 	var clamp = function (x, range) {
 		return Math.max(range[0], Math.min(x, range[1]));
-	}
+	};
 
 	/**
 	 * @returns {Boolean} true if agent is probably a mobile device. Don't really care if this is accurate.
@@ -183,15 +183,31 @@ var Windy = function (params) {
 		];
 	};
 
+	// save a reference to columns so we can call createField with bounds only
+	var persistedColumns = null;
 
-
+	/**
+	 * Can be called externally with columns=null to get field from a point on the map
+	 *
+	 * @param columns {Array}
+	 * @param bounds {Object}
+	 * @param callback {Object}
+	 */
 	var createField = function (columns, bounds, callback) {
+
+		if(!columns){
+			columns = persistedColumns;
+		}
+		else {
+			persistedColumns = columns;
+		}
 
 		/**
 		 * @returns {Array} wind vector [u, v, magnitude] at the point (x, y), or [NaN, NaN, null] if wind
 		 *          is undefined at that point.
 		 */
 		function field(x, y) {
+			if(!columns) return [NaN, NaN, null];
 			var column = columns[Math.round(x)];
 			return column && column[Math.round(y)] || NULL_WIND_VECTOR;
 		}
@@ -199,7 +215,7 @@ var Windy = function (params) {
 		// Frees the massive "columns" array for GC. Without this, the array is leaked (in Chrome) each time a new
 		// field is interpolated because the field closure's context is leaked, for reasons that defy explanation.
 		field.release = function () {
-			delete columns;
+			//delete columns;
 			columns = [];
 		};
 
@@ -330,7 +346,7 @@ var Windy = function (params) {
 
 		function windTemperatureColorScale(minTemp, maxTemp) {
 
-			result = [
+			var result = [
 				"rgb(36,104, 180)",
 				"rgb(60,157, 194)",
 				"rgb(128,205,193 )",
@@ -433,7 +449,7 @@ var Windy = function (params) {
 		(function frame() {
 			animationLoop = requestAnimationFrame(frame);
 			var now = Date.now()
-			delta = now - then;
+			var delta = now - then;
 			if (delta > FRAME_TIME) {
 				then = now - (delta % FRAME_TIME);
 				evolve();
@@ -490,13 +506,13 @@ var Windy = function (params) {
 		}
 	};
 
-
 	var windy = {
 		params: params,
 		start: start,
 		stop: stop,
 		update: updateData,
-		shift: shift
+		shift: shift,
+		createField: createField
 	};
 
 	return windy;
@@ -514,7 +530,8 @@ window.requestAnimationFrame = (function () {
 		};
 })();
 
-if (!window.cancelAnimationFrame)
+if(!window.cancelAnimationFrame) {
 	window.cancelAnimationFrame = function (id) {
 		clearTimeout(id);
 	};
+}
