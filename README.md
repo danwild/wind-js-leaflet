@@ -45,3 +45,6 @@ errorCallback: handleError                          // callback function to get 
 - [grib2json](https://github.com/cambecc/grib2json)
 - [earth](https://github.com/cambecc/earth)
 - [WindJS](https://github.com/Esri/wind-js)
+
+## License
+MIT License (MIT)
