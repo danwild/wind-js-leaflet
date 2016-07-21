@@ -1,6 +1,6 @@
 {
   "name": "wind-js-leaflet",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Leaflet plugin to add WindJS data visualisation overlay",
   "main": "dist/wind-js-leaflet.js",
   "scripts": {
