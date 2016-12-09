@@ -1,4 +1,4 @@
-# wind-js-leaflet
+# wind-js-leaflet [![NPM version][npm-image]][npm-url]
 A plugin for Leaflet to add visualisation overlay of wind direction, wind velocity, and temperature.
 To use this plugin, you will need to run your own [wind-js-server](https://github.com/danwild/wind-js-server) instance.
 The data is 1 degree, 6 hourly data from [NOAA](http://nomads.ncep.noaa.gov/).
@@ -50,3 +50,6 @@ errorCallback: handleError                      // callback function to get call
 
 ## License
 MIT License (MIT)
+
+[npm-image]: https://badge.fury.io/js/wind-js-leaflet.svg
+[npm-url]: https://www.npmjs.com/package/wind-js-leaflet

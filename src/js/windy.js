@@ -23,6 +23,11 @@ var Windy = function (params) {
 
 	var NULL_WIND_VECTOR = [NaN, NaN, null];                                     // singleton for no wind in the form: [u, v, magnitude]
 
+	var builder;
+	var grid;
+	var date;
+	var λ0, φ0, Δλ, Δφ, ni, nj;
+
 	// interpolation for vectors like wind (u,v,m)
 	var bilinearInterpolateVector = function (x, y, g00, g10, g01, g11) {
 		var rx = (1 - x);
@@ -33,7 +38,6 @@ var Windy = function (params) {
 		var tmp = g00[2] * a + g10[2] * b + g01[2] * c + g11[2] * d;
 		return [u, v, tmp];
 	};
-
 
 	var createWindBuilder = function (uComp, vComp, temp) {
 		var uData = uComp.data, vData = vComp.data;
@@ -64,19 +68,28 @@ var Windy = function (params) {
 	};
 
 	var buildGrid = function (data, callback) {
-		var builder = createBuilder(data);
 
+		builder = createBuilder(data);
 		var header = builder.header;
-		var λ0 = header.lo1, φ0 = header.la1;  // the grid's origin (e.g., 0.0E, 90.0N)
-		var Δλ = header.dx, Δφ = header.dy;    // distance between grid points (e.g., 2.5 deg lon, 2.5 deg lat)
-		var ni = header.nx, nj = header.ny;    // number of grid points W-E and N-S (e.g., 144 x 73)
-		var date = new Date(header.refTime);
+
+		λ0 = header.lo1;
+		φ0 = header.la1;  // the grid's origin (e.g., 0.0E, 90.0N)
+
+		Δλ = header.dx;
+		Δφ = header.dy;    // distance between grid points (e.g., 2.5 deg lon, 2.5 deg lat)
+
+		ni = header.nx;
+		nj = header.ny;    // number of grid points W-E and N-S (e.g., 144 x 73)
+
+		date = new Date(header.refTime);
 		date.setHours(date.getHours() + header.forecastTime);
 
 		// Scan mode 0 assumed. Longitude increases from λ0, and latitude decreases from φ0.
 		// http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table3-4.shtml
-		var grid = [], p = 0;
+		grid = [];
+		var p = 0;
 		var isContinuous = Math.floor(ni * Δλ) >= 360;
+
 		for (var j = 0; j < nj; j++) {
 			var row = [];
 			for (var i = 0; i < ni; i++, p++) {
@@ -89,32 +102,39 @@ var Windy = function (params) {
 			grid[j] = row;
 		}
 
-		function interpolate(λ, φ) {
-			var i = floorMod(λ - λ0, 360) / Δλ;  // calculate longitude index in wrapped range [0, 360)
-			var j = (φ0 - φ) / Δφ;                 // calculate latitude index in direction +90 to -90
-
-			var fi = Math.floor(i), ci = fi + 1;
-			var fj = Math.floor(j), cj = fj + 1;
-
-			var row;
-			if ((row = grid[fj])) {
-				var g00 = row[fi];
-				var g10 = row[ci];
-				if (isValue(g00) && isValue(g10) && (row = grid[cj])) {
-					var g01 = row[fi];
-					var g11 = row[ci];
-					if (isValue(g01) && isValue(g11)) {
-						// All four points found, so interpolate the value.
-						return builder.interpolate(i - fi, j - fj, g00, g10, g01, g11);
-					}
-				}
-			}
-			return null;
-		}
 		callback({
 			date: date,
 			interpolate: interpolate
 		});
+	};
+
+	/**
+	 * Get interpolated grid value from Lon/Lat position
+	 * @param λ {Float} Longitude
+	 * @param φ {Float} Latitude
+	 * @returns {null}
+	 */
+	var interpolate = function(λ, φ) {
+		var i = floorMod(λ - λ0, 360) / Δλ;  // calculate longitude index in wrapped range [0, 360)
+		var j = (φ0 - φ) / Δφ;                 // calculate latitude index in direction +90 to -90
+
+		var fi = Math.floor(i), ci = fi + 1;
+		var fj = Math.floor(j), cj = fj + 1;
+
+		var row;
+		if ((row = grid[fj])) {
+			var g00 = row[fi];
+			var g10 = row[ci];
+			if (isValue(g00) && isValue(g10) && (row = grid[cj])) {
+				var g01 = row[fi];
+				var g11 = row[ci];
+				if (isValue(g01) && isValue(g11)) {
+					// All four points found, so interpolate the value.
+					return builder.interpolate(i - fi, j - fj, g00, g10, g01, g11);
+				}
+			}
+		}
+		return null;
 	};
 
 
@@ -183,24 +203,7 @@ var Windy = function (params) {
 		];
 	};
 
-	// save a reference to columns so we can call createField with bounds only
-	var persistedColumns = null;
-
-	/**
-	 * Can be called externally with columns=null to get field from a point on the map
-	 *
-	 * @param columns {Array}
-	 * @param bounds {Object}
-	 * @param callback {Object}
-	 */
 	var createField = function (columns, bounds, callback) {
-
-		if(!columns){
-			columns = persistedColumns;
-		}
-		else {
-			persistedColumns = columns;
-		}
 
 		/**
 		 * @returns {Array} wind vector [u, v, magnitude] at the point (x, y), or [NaN, NaN, null] if wind
@@ -512,7 +515,8 @@ var Windy = function (params) {
 		stop: stop,
 		update: updateData,
 		shift: shift,
-		createField: createField
+		createField: createField,
+		interpolatePoint: interpolate
 	};
 
 	return windy;

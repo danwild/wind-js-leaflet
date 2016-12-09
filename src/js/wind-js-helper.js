@@ -90,8 +90,19 @@ var WindJSHelper = {
             var bounds = WindJSHelper.map.getBounds();
             var size = WindJSHelper.map.getSize();
 
-            WindJSHelper.windy.start( [[0,0],[size.x, size.y]], size.x, size.y,
-                [[bounds._southWest.lng, bounds._southWest.lat ],[bounds._northEast.lng, bounds._northEast.lat]] );
+	        // bounds, width, height, extent
+            WindJSHelper.windy.start(
+	            [
+		            [0,0],
+		            [size.x, size.y]
+	            ],
+	            size.x,
+	            size.y,
+                [
+	                [bounds._southWest.lng, bounds._southWest.lat],
+	                [bounds._northEast.lng, bounds._northEast.lat]
+                ]
+            );
         }, 750); // showing wind is delayed
 
     },

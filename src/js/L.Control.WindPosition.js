@@ -33,36 +33,26 @@ L.Control.WindPosition = L.Control.extend({
     _onMouseMove: function (e) {
 
         var self = this;
-        var size = WindJSHelper.map.getSize();
-        var bounds = {
-            width: size.x,
-            height: size.y,
-            x: e.containerPoint.x,
-            y: e.containerPoint.y
-        };
+	    var pos = WindJSHelper.map.containerPointToLatLng(L.point(e.containerPoint.x, e.containerPoint.y));
+	    var gridValue = WindJSHelper.windy.interpolatePoint(pos.lng, pos.lat);
+	    var htmlOut = "";
 
-        WindJSHelper.windy.createField(null, bounds, function(bounds, field){
+	    if(gridValue && !isNaN(gridValue[0]) && !isNaN(gridValue[1]) && gridValue[2]){
 
-            var fieldData = field(e.containerPoint.x, e.containerPoint.y);
-            var htmlOut = "";
+		    // vMs comes out upside-down..
+		    var vMs = gridValue[1];
+		    vMs = (vMs > 0) ? vMs = vMs - (vMs * 2) : Math.abs(vMs);
 
-            if(fieldData && !isNaN(fieldData[0]) && !isNaN(fieldData[1]) && fieldData[2]){
+		    htmlOut =
+			    "<strong>Wind Direction: </strong>"+  self.vectorToDegrees(gridValue[0], vMs) + "°" +
+			    ", <strong>Wind Speed: </strong>" + self.vectorToSpeed(gridValue[0],vMs).toFixed(1) + "m/s" +
+			    ", <strong>Temp: </strong>"+ (gridValue[2] - 273.15).toFixed(1)  + "°C";
+	    }
+	    else {
+		    htmlOut = "no wind data";
+	    }
 
-                // vMs comes out upside-down..
-                var vMs = fieldData[1];
-                vMs = (vMs > 0) ? vMs = vMs - (vMs * 2) : Math.abs(vMs);
-
-                htmlOut =
-                    "<strong>Wind Direction: </strong>"+  self.vectorToDegrees(fieldData[0], vMs) + "°" +
-                    ", <strong>Wind Speed: </strong>" + self.vectorToSpeed(fieldData[0],vMs).toFixed(1) + "m/s" +
-                    ", <strong>Temp: </strong>"+ (fieldData[2] - 273.15).toFixed(1)  + "°C";
-            }
-            else {
-                htmlOut = "no wind data";
-            }
-
-            self._container.innerHTML = htmlOut;
-        });
+	    self._container.innerHTML = htmlOut;
 
         // move control to bottom row
         if($('.leaflet-control-wind-position').index() == 0){
