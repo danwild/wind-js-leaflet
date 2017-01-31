@@ -57,8 +57,10 @@ WindJSLeaflet.init({
 		displayEmptyString: 'No wind data'
 	},
 	overlayName: 'wind',
-	pingUrl: 'http://144.6.233.100:7000/alive/',
-	latestUrl: 'http://144.6.233.100:7000/latest/',
-	nearestUrl: 'http://144.6.233.100:7000/nearest/',
+
+	// https://github.com/danwild/wind-js-server
+	pingUrl: 'http://localhost:7000/alive',
+	latestUrl: 'http://localhost:7000/latest',
+	nearestUrl: 'http://localhost:7000/nearest',
 	errorCallback: handleError
 });

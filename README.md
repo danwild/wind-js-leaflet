@@ -3,6 +3,19 @@ A plugin for Leaflet to add visualisation overlay of wind direction, wind veloci
 To use this plugin, you will need to run your own [wind-js-server](https://github.com/danwild/wind-js-server) instance.
 The data is 1 degree, 6 hourly data from [NOAA](http://nomads.ncep.noaa.gov/).
 
+## Version 2.0.0, breaking changes
+Now supports both leaflet version `0.7.7` and `1.0.3`.
+However this update brings one breaking change - how you initialise the plugin.
+
+v1 way to init: 
+```javascript
+WindJSLeaflet({ options: 'here' });
+```
+v2 way to init: 
+```javascript
+WindJSLeaflet.init({ options: 'here' });
+```
+
 ![Screenshot](/screenshots/wind.gif?raw=true)
 
 ## Install
@@ -43,7 +56,8 @@ errorCallback: handleError                      // callback function to get call
 
 ## Reference
 `wind-js-leaflet` is possible because of things like:
-- [L.CanvasOverlay.js](https://gist.github.com/Sumbera/11114288)
+- [L.CanvasOverlay.js](https://gist.github.com/Sumbera/11114288) (WindJSLeaflet v1)
+- [gLayers.Leaflet](https://github.com/Sumbera/gLayers.Leaflet) (WindJSLeaflet v2)
 - [grib2json](https://github.com/cambecc/grib2json)
 - [earth](https://github.com/cambecc/earth)
 - [WindJS](https://github.com/Esri/wind-js)

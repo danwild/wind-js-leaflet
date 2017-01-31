@@ -22,7 +22,7 @@
 		_map: null,
 		_data: null,
 		_options: null,
-		_canvasOverlay: null,
+		_canvasLayer: null,
 		_windy: null,
 		_context: null,
 		_timer: 0,
@@ -31,24 +31,28 @@
 		init: function (options) {
 			
 			// don't bother setting up if the service is unavailable
-			this._checkWind(options).then(function () {
+			this._checkWind(options).then(function() {
+
+				console.log('_checkWind returned..');
 
 				// set properties
 				WindJSLeaflet._map = options.map;
 				WindJSLeaflet._options = options;
 
 				// create canvas, add overlay control
-				WindJSLeaflet._canvasOverlay = L.canvasOverlay().drawing(WindJSLeaflet._redraw);
-				WindJSLeaflet._options.layerControl.addOverlay(WindJSLeaflet._canvasOverlay, 'wind');
+				WindJSLeaflet._canvasLayer = L.canvasLayer().delegate(WindJSLeaflet);
+				
+				WindJSLeaflet._options.layerControl.addOverlay(WindJSLeaflet._canvasLayer, 'wind');
 
 				// ensure clean up on deselect overlay
 				WindJSLeaflet._map.on('overlayremove', function (e) {
-					if (e.layer == WindJSLeaflet.__canvasOverlay) {
+					if (e.layer == WindJSLeaflet.__canvasLayer) {
 						WindJSHelper._destroyWind();
 					}
 				});
 
-			}).catch(function (err) {
+			}).catch(function(err) {
+				console.log('err');
 				WindJSLeaflet._options.errorCallback(err);
 			});
 
@@ -134,7 +138,7 @@
 			});
 		},
 
-		_redraw: function(overlay, params) {
+		onDrawLayer: function(overlay, params) {
 
 			if (!WindJSLeaflet._windy) {
 				WindJSLeaflet._loadWindData();
@@ -149,22 +153,31 @@
 				var size = WindJSLeaflet._map.getSize();
 
 				// bounds, width, height, extent
-				WindJSLeaflet._windy.start([[0, 0], [size.x, size.y]], size.x, size.y, [[bounds._southWest.lng, bounds._southWest.lat], [bounds._northEast.lng, bounds._northEast.lat]]);
+				WindJSLeaflet._windy.start(
+					[
+						[0, 0],
+						[size.x, size.y]
+					],
+					size.x,
+					size.y,
+					[
+						[bounds._southWest.lng, bounds._southWest.lat],
+						[bounds._northEast.lng, bounds._northEast.lat]
+					]);
 			}, 750); // showing wind is delayed
 		},
 
 
 		_initWindy: function(data) {
 
-			console.log(data);
-
 			// windy object
-			this._windy = new Windy({ canvas: WindJSLeaflet._canvasOverlay._canvas, data: data });
+			this._windy = new Windy({ canvas: WindJSLeaflet._canvasLayer._canvas, data: data });
 
 			// prepare context global var, start drawing
-			this._context = this._canvasOverlay._canvas.getContext('2d');
-			this._canvasOverlay._canvas.classList.add("wind-overlay");
-			this._canvasOverlay._redraw();
+			this._context = this._canvasLayer._canvas.getContext('2d');
+			this._canvasLayer._canvas.classList.add("wind-overlay");
+			//this._canvasLayer.onDrawLayer();
+			this.onDrawLayer();
 
 			this._map.on('dragstart', WindJSLeaflet._windy.stop);
 			this._map.on('zoomstart', WindJSLeaflet._clearWind);
@@ -191,11 +204,10 @@
 			if (this._mouseControl) this.map.removeControl(this._mouseControl);
 			this._mouseControl = null;
 			this._windy = null;
-			this._map.removeLayer(this._canvasOverlay);
+			this._map.removeLayer(this._canvasLayer);
 		}
 		
 	};
-	
 
 	return WindJSLeaflet;
 

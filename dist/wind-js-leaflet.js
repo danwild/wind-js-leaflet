@@ -2,54 +2,72 @@
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
-var _L$Class$extend;
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
 /*
- Generic  Canvas Overlay for leaflet, 
- Stanislav Sumbera, April , 2014
-
- - added userDrawFunc that is called when Canvas need to be redrawn
- - added few useful params fro userDrawFunc callback
- - fixed resize map bug
- inspired & portions taken from  :   https://github.com/Leaflet/Leaflet.heat
-
- License: MIT
+ Generic  Canvas Layer for leaflet 0.7 and 1.0-rc,
+ copyright Stanislav Sumbera,  2016 , sumbera.com , license MIT
+ originally created and motivated by L.CanvasOverlay  available here: https://gist.github.com/Sumbera/11114288
 
  */
 
-L.CanvasOverlay = L.Class.extend((_L$Class$extend = {
+// -- L.DomUtil.setTransform from leaflet 1.0.0 to work on 0.0.7
+//------------------------------------------------------------------------------
+L.DomUtil.setTransform = L.DomUtil.setTransform || function (el, offset, scale) {
+	var pos = offset || new L.Point(0, 0);
 
-	initialize: function initialize(userDrawFunc, options) {
-		this._userDrawFunc = userDrawFunc;
+	el.style[L.DomUtil.TRANSFORM] = (L.Browser.ie3d ? 'translate(' + pos.x + 'px,' + pos.y + 'px)' : 'translate3d(' + pos.x + 'px,' + pos.y + 'px,0)') + (scale ? ' scale(' + scale + ')' : '');
+};
+
+// -- support for both  0.0.7 and 1.0.0 rc2 leaflet
+L.CanvasLayer = (L.Layer ? L.Layer : L.Class).extend({
+	// -- initialized is called on prototype
+	initialize: function initialize(options) {
+		this._map = null;
+		this._canvas = null;
+		this._frame = null;
+		this._delegate = null;
 		L.setOptions(this, options);
 	},
 
-	drawing: function drawing(userDrawFunc) {
-		this._userDrawFunc = userDrawFunc;
+	delegate: function delegate(del) {
+		this._delegate = del;
 		return this;
 	},
 
-	params: function params(options) {
-		L.setOptions(this, options);
-		return this;
-	},
-
-	canvas: function canvas() {
-		return this._canvas;
-	},
-
-	_redraw: function _redraw() {
+	needRedraw: function needRedraw() {
 		if (!this._frame) {
-			this._frame = L.Util.requestAnimFrame(this._redraw, this);
+			this._frame = L.Util.requestAnimFrame(this.drawLayer, this);
 		}
 		return this;
 	},
 
+	//-------------------------------------------------------------
+	_onLayerDidResize: function _onLayerDidResize(resizeEvent) {
+		this._canvas.width = resizeEvent.newSize.x;
+		this._canvas.height = resizeEvent.newSize.y;
+	},
+	//-------------------------------------------------------------
+	_onLayerDidMove: function _onLayerDidMove() {
+		var topLeft = this._map.containerPointToLayerPoint([0, 0]);
+		L.DomUtil.setPosition(this._canvas, topLeft);
+		this.drawLayer();
+	},
+	//-------------------------------------------------------------
+	getEvents: function getEvents() {
+		var events = {
+			resize: this._onLayerDidResize,
+			moveend: this._onLayerDidMove
+		};
+		if (this._map.options.zoomAnimation && L.Browser.any3d) {
+			events.zoomanim = this._animateZoom;
+		}
+
+		return events;
+	},
+	//-------------------------------------------------------------
 	onAdd: function onAdd(map) {
 		this._map = map;
-		this._canvas = L.DomUtil.create('canvas', 'leaflet-heatmap-layer');
+		this._canvas = L.DomUtil.create('canvas', 'leaflet-layer');
+		this.tiles = {};
 
 		var size = this._map.getSize();
 		this._canvas.width = size.x;
@@ -60,76 +78,82 @@ L.CanvasOverlay = L.Class.extend((_L$Class$extend = {
 
 		map._panes.overlayPane.appendChild(this._canvas);
 
-		map.on('moveend', this._reset, this);
-		map.on('resize', this._resize, this);
+		map.on(this.getEvents(), this);
 
-		if (map.options.zoomAnimation && L.Browser.any3d) {
-			map.on('zoomanim', this._animateZoom, this);
-		}
-
-		this._reset();
+		var del = this._delegate || this;
+		del.onLayerDidMount && del.onLayerDidMount(); // -- callback
+		this.needRedraw();
 	},
 
+	//-------------------------------------------------------------
 	onRemove: function onRemove(map) {
+		var del = this._delegate || this;
+		del.onLayerWillUnmount && del.onLayerWillUnmount(); // -- callback
+
+
 		map.getPanes().overlayPane.removeChild(this._canvas);
 
-		map.off('moveend', this._reset, this);
-		map.off('resize', this._resize, this);
+		map.off(this.getEvents(), this);
 
-		if (map.options.zoomAnimation) {
-			map.off('zoomanim', this._animateZoom, this);
-		}
-		var this_canvas = null;
+		this._canvas = null;
 	},
 
+	//------------------------------------------------------------
 	addTo: function addTo(map) {
 		map.addLayer(this);
 		return this;
 	},
-
-	_resize: function _resize(resizeEvent) {
-		this._canvas.width = resizeEvent.newSize.x;
-		this._canvas.height = resizeEvent.newSize.y;
+	// --------------------------------------------------------------------------------
+	LatLonToMercator: function LatLonToMercator(latlon) {
+		return {
+			x: latlon.lng * 6378137 * Math.PI / 180,
+			y: Math.log(Math.tan((90 + latlon.lat) * Math.PI / 360)) * 6378137
+		};
 	},
-	_reset: function _reset() {
-		var topLeft = this._map.containerPointToLayerPoint([0, 0]);
-		L.DomUtil.setPosition(this._canvas, topLeft);
-		this._redraw();
-	}
 
-}, _defineProperty(_L$Class$extend, '_redraw', function _redraw() {
-	var size = this._map.getSize();
-	var bounds = this._map.getBounds();
-	var zoomScale = size.x * 180 / (20037508.34 * (bounds.getEast() - bounds.getWest())); // resolution = 1/zoomScale
-	var zoom = this._map.getZoom();
+	//------------------------------------------------------------------------------
+	drawLayer: function drawLayer() {
+		// -- todo make the viewInfo properties  flat objects.
+		var size = this._map.getSize();
+		var bounds = this._map.getBounds();
+		var zoom = this._map.getZoom();
 
-	// console.time('process');
+		var center = this.LatLonToMercator(this._map.getCenter());
+		var corner = this.LatLonToMercator(this._map.containerPointToLatLng(this._map.getSize()));
 
-	if (this._userDrawFunc) {
-		this._userDrawFunc(this, {
+		var del = this._delegate || this;
+		del.onDrawLayer && del.onDrawLayer({
+			layer: this,
 			canvas: this._canvas,
 			bounds: bounds,
 			size: size,
-			zoomScale: zoomScale,
 			zoom: zoom,
-			options: this.options
+			center: center,
+			corner: corner
 		});
+		this._frame = null;
+	},
+	// -- L.DomUtil.setTransform from leaflet 1.0.0 to work on 0.0.7
+	//------------------------------------------------------------------------------
+	_setTransform: function _setTransform(el, offset, scale) {
+		var pos = offset || new L.Point(0, 0);
+
+		el.style[L.DomUtil.TRANSFORM] = (L.Browser.ie3d ? 'translate(' + pos.x + 'px,' + pos.y + 'px)' : 'translate3d(' + pos.x + 'px,' + pos.y + 'px,0)') + (scale ? ' scale(' + scale + ')' : '');
+	},
+
+	//------------------------------------------------------------------------------
+	_animateZoom: function _animateZoom(e) {
+		var scale = this._map.getZoomScale(e.zoom);
+		// -- different calc of offset in leaflet 1.0.0 and 0.0.7 thanks for 1.0.0-rc2 calc @jduggan1
+		var offset = L.Layer ? this._map._latLngToNewLayerPoint(this._map.getBounds().getNorthWest(), e.zoom, e.center) : this._map._getCenterOffset(e.center)._multiplyBy(-scale).subtract(this._map._getMapPanePos());
+
+		L.DomUtil.setTransform(this._canvas, offset, scale);
 	}
+});
 
-	// console.timeEnd('process');
-
-	this._frame = null;
-}), _defineProperty(_L$Class$extend, '_animateZoom', function _animateZoom(e) {
-	var scale = this._map.getZoomScale(e.zoom),
-	    offset = this._map._getCenterOffset(e.center)._multiplyBy(-scale).subtract(this._map._getMapPanePos());
-
-	this._canvas.style[L.DomUtil.TRANSFORM] = L.DomUtil.getTranslateString(offset) + ' scale(' + scale + ')';
-}), _L$Class$extend));
-
-L.canvasOverlay = function (userDrawFunc, options) {
-	return new L.CanvasOverlay(userDrawFunc, options);
+L.canvasLayer = function () {
+	return new L.CanvasLayer();
 };
-
 /*  Global class for simulating the movement of particle through a 1km wind grid
 
  credit: All the credit for this work goes to: https://github.com/cambecc for creating the repo:
@@ -770,7 +794,7 @@ L.control.windPosition = function (options) {
 		_map: null,
 		_data: null,
 		_options: null,
-		_canvasOverlay: null,
+		_canvasLayer: null,
 		_windy: null,
 		_context: null,
 		_timer: 0,
@@ -781,21 +805,25 @@ L.control.windPosition = function (options) {
 			// don't bother setting up if the service is unavailable
 			this._checkWind(options).then(function () {
 
+				console.log('_checkWind returned..');
+
 				// set properties
 				WindJSLeaflet._map = options.map;
 				WindJSLeaflet._options = options;
 
 				// create canvas, add overlay control
-				WindJSLeaflet._canvasOverlay = L.canvasOverlay().drawing(WindJSLeaflet._redraw);
-				WindJSLeaflet._options.layerControl.addOverlay(WindJSLeaflet._canvasOverlay, 'wind');
+				WindJSLeaflet._canvasLayer = L.canvasLayer().delegate(WindJSLeaflet);
+
+				WindJSLeaflet._options.layerControl.addOverlay(WindJSLeaflet._canvasLayer, 'wind');
 
 				// ensure clean up on deselect overlay
 				WindJSLeaflet._map.on('overlayremove', function (e) {
-					if (e.layer == WindJSLeaflet.__canvasOverlay) {
+					if (e.layer == WindJSLeaflet.__canvasLayer) {
 						WindJSHelper._destroyWind();
 					}
 				});
 			}).catch(function (err) {
+				console.log('err');
 				WindJSLeaflet._options.errorCallback(err);
 			});
 		},
@@ -880,7 +908,7 @@ L.control.windPosition = function (options) {
 			});
 		},
 
-		_redraw: function _redraw(overlay, params) {
+		onDrawLayer: function onDrawLayer(overlay, params) {
 
 			if (!WindJSLeaflet._windy) {
 				WindJSLeaflet._loadWindData();
@@ -901,15 +929,14 @@ L.control.windPosition = function (options) {
 
 		_initWindy: function _initWindy(data) {
 
-			console.log(data);
-
 			// windy object
-			this._windy = new Windy({ canvas: WindJSLeaflet._canvasOverlay._canvas, data: data });
+			this._windy = new Windy({ canvas: WindJSLeaflet._canvasLayer._canvas, data: data });
 
 			// prepare context global var, start drawing
-			this._context = this._canvasOverlay._canvas.getContext('2d');
-			this._canvasOverlay._canvas.classList.add("wind-overlay");
-			this._canvasOverlay._redraw();
+			this._context = this._canvasLayer._canvas.getContext('2d');
+			this._canvasLayer._canvas.classList.add("wind-overlay");
+			//this._canvasLayer.onDrawLayer();
+			this.onDrawLayer();
 
 			this._map.on('dragstart', WindJSLeaflet._windy.stop);
 			this._map.on('zoomstart', WindJSLeaflet._clearWind);
@@ -936,7 +963,7 @@ L.control.windPosition = function (options) {
 			if (this._mouseControl) this.map.removeControl(this._mouseControl);
 			this._mouseControl = null;
 			this._windy = null;
-			this._map.removeLayer(this._canvasOverlay);
+			this._map.removeLayer(this._canvasLayer);
 		}
 
 	};

@@ -1,6 +1,6 @@
 {
   "name": "wind-js-leaflet",
-  "version": "1.0.2",
+  "version": "2.0.0",
   "description": "Leaflet plugin to add WindJS data visualisation overlay",
   "main": "dist/wind-js-leaflet.js",
   "scripts": {
@@ -24,9 +24,7 @@
     "url": "https://github.com/danwild/wind-js-leaflet/issues"
   },
   "homepage": "https://github.com/danwild/wind-js-leaflet#readme",
-  "dependencies": {
-    "leafletjs-canvas-overlay": "^1.0.0"
-  },
+  "dependencies": {},
   "devDependencies": {
     "babel-preset-es2015": "^6.9.0",
     "gulp": "^3.9.1",

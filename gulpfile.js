@@ -9,7 +9,8 @@ const cssNano       = require('gulp-cssnano');
 // Concatenate & Minify src and dependencies
 gulp.task('scripts', function() {
 	return gulp.src([
-		'node_modules/leafletjs-canvas-overlay/L.CanvasOverlay.js',
+		//'node_modules/leafletjs-canvas-overlay/L.CanvasOverlay.js',
+		'src/js/L.CanvasLayer.js',
 		'src/js/windy.js',
 		'src/js/L.Control.WindPosition.js',
 		'src/js/wind-js-helper.js',
