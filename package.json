@@ -1,11 +1,8 @@
 {
   "name": "wind-js-leaflet",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Leaflet plugin to add WindJS data visualisation overlay",
-  "main": [
-	  "dist/wind-js-leaflet.js",
-	  "dist/wind-js-leaflet.css"
-  ],
+  "main": "dist/wind-js-leaflet.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
