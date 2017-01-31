@@ -44,22 +44,21 @@ var handleError = function(err){
     console.log(err);
 };
 
-// wind-js-leaflet
-var windJSLeaflet = new WindJSLeaflet({
+WindJSLeaflet.init({
 	localMode: true,
 	map: map,
 	layerControl: layerControl,
 	useNearest: false,
-    timeISO: null,
-    nearestDaysLimit: 7,
-    displayValues: true,
-    displayOptions: {
-        displayPosition: 'bottomleft',
-        displayEmptyString: 'No wind data'
-    },
-    overlayName: 'wind',
-    pingUrl: 'http://144.6.233.100:7000/alive/',
-    latestUrl: 'http://144.6.233.100:7000/latest/',
-    nearestUrl: 'http://144.6.233.100:7000/nearest/',
-    errorCallback: handleError
+	timeISO: null,
+	nearestDaysLimit: 7,
+	displayValues: true,
+	displayOptions: {
+		displayPosition: 'bottomleft',
+		displayEmptyString: 'No wind data'
+	},
+	overlayName: 'wind',
+	pingUrl: 'http://144.6.233.100:7000/alive/',
+	latestUrl: 'http://144.6.233.100:7000/latest/',
+	nearestUrl: 'http://144.6.233.100:7000/nearest/',
+	errorCallback: handleError
 });

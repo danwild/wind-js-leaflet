@@ -2,6 +2,10 @@
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
+var _L$Class$extend;
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 /*
  Generic  Canvas Overlay for leaflet, 
  Stanislav Sumbera, April , 2014
@@ -15,7 +19,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
  */
 
-L.CanvasOverlay = L.Class.extend({
+L.CanvasOverlay = L.Class.extend((_L$Class$extend = {
 
 	initialize: function initialize(userDrawFunc, options) {
 		this._userDrawFunc = userDrawFunc;
@@ -36,7 +40,7 @@ L.CanvasOverlay = L.Class.extend({
 		return this._canvas;
 	},
 
-	redraw: function redraw() {
+	_redraw: function _redraw() {
 		if (!this._frame) {
 			this._frame = L.Util.requestAnimFrame(this._redraw, this);
 		}
@@ -91,39 +95,36 @@ L.CanvasOverlay = L.Class.extend({
 		var topLeft = this._map.containerPointToLayerPoint([0, 0]);
 		L.DomUtil.setPosition(this._canvas, topLeft);
 		this._redraw();
-	},
-
-	_redraw: function _redraw() {
-		var size = this._map.getSize();
-		var bounds = this._map.getBounds();
-		var zoomScale = size.x * 180 / (20037508.34 * (bounds.getEast() - bounds.getWest())); // resolution = 1/zoomScale
-		var zoom = this._map.getZoom();
-
-		// console.time('process');
-
-		if (this._userDrawFunc) {
-			this._userDrawFunc(this, {
-				canvas: this._canvas,
-				bounds: bounds,
-				size: size,
-				zoomScale: zoomScale,
-				zoom: zoom,
-				options: this.options
-			});
-		}
-
-		// console.timeEnd('process');
-
-		this._frame = null;
-	},
-
-	_animateZoom: function _animateZoom(e) {
-		var scale = this._map.getZoomScale(e.zoom),
-		    offset = this._map._getCenterOffset(e.center)._multiplyBy(-scale).subtract(this._map._getMapPanePos());
-
-		this._canvas.style[L.DomUtil.TRANSFORM] = L.DomUtil.getTranslateString(offset) + ' scale(' + scale + ')';
 	}
-});
+
+}, _defineProperty(_L$Class$extend, '_redraw', function _redraw() {
+	var size = this._map.getSize();
+	var bounds = this._map.getBounds();
+	var zoomScale = size.x * 180 / (20037508.34 * (bounds.getEast() - bounds.getWest())); // resolution = 1/zoomScale
+	var zoom = this._map.getZoom();
+
+	// console.time('process');
+
+	if (this._userDrawFunc) {
+		this._userDrawFunc(this, {
+			canvas: this._canvas,
+			bounds: bounds,
+			size: size,
+			zoomScale: zoomScale,
+			zoom: zoom,
+			options: this.options
+		});
+	}
+
+	// console.timeEnd('process');
+
+	this._frame = null;
+}), _defineProperty(_L$Class$extend, '_animateZoom', function _animateZoom(e) {
+	var scale = this._map.getZoomScale(e.zoom),
+	    offset = this._map._getCenterOffset(e.center)._multiplyBy(-scale).subtract(this._map._getMapPanePos());
+
+	this._canvas.style[L.DomUtil.TRANSFORM] = L.DomUtil.getTranslateString(offset) + ' scale(' + scale + ')';
+}), _L$Class$extend));
 
 L.canvasOverlay = function (userDrawFunc, options) {
 	return new L.CanvasOverlay(userDrawFunc, options);
@@ -706,8 +707,8 @@ L.Control.WindPosition = L.Control.extend({
 	_onMouseMove: function _onMouseMove(e) {
 
 		var self = this;
-		var pos = WindJSHelper.map.containerPointToLatLng(L.point(e.containerPoint.x, e.containerPoint.y));
-		var gridValue = WindJSHelper.windy.interpolatePoint(pos.lng, pos.lat);
+		var pos = WindJSLeaflet._map.containerPointToLatLng(L.point(e.containerPoint.x, e.containerPoint.y));
+		var gridValue = WindJSLeaflet._windy.interpolatePoint(pos.lng, pos.lat);
 		var htmlOut = "";
 
 		if (gridValue && !isNaN(gridValue[0]) && !isNaN(gridValue[1]) && gridValue[2]) {
@@ -746,142 +747,6 @@ L.control.windPosition = function (options) {
 	return new L.Control.WindPosition(options);
 };
 
-var WindJSHelper = {
-
-	map: null,
-	data: null,
-	options: null,
-	canvasOverlay: null,
-	windy: null,
-	context: null,
-	timer: null,
-	mouseControl: null,
-
-	init: function init(options) {
-
-		// set properties
-		this.map = options.map;
-		this.options = options;
-
-		// clean up on remove
-		options.map.on('overlayremove', function (e) {
-			if (e.layer == WindJSHelper.canvasOverlay) {
-				WindJSHelper.destroyWind();
-			}
-		});
-	},
-
-	getRequestUrl: function getRequestUrl() {
-
-		if (!WindJSHelper.options.useNearest) {
-			return WindJSHelper.options.latestUrl;
-		}
-
-		var params = {
-			"timeIso": WindJSHelper.options.timeISO || new Date().toISOString(),
-			"searchLimit": WindJSHelper.options.nearestDaysLimit || 7 // don't show data out by more than limit
-		};
-
-		return WindJSHelper.options.nearestUrl + '?' + $.param(params);
-	},
-
-	loadLocalData: function loadLocalData() {
-
-		console.log('using local data..');
-
-		$.getJSON('demo.json', function (data) {
-			WindJSHelper.data = data;
-			WindJSHelper.initWindy(data);
-		});
-	},
-
-	loadWindData: function loadWindData() {
-
-		if (WindJSHelper.options.localMode) {
-			WindJSHelper.loadLocalData();
-			return;
-		}
-
-		var request = WindJSHelper.getRequestUrl();
-		console.log(request);
-
-		$.ajax({
-			type: 'GET',
-			url: request,
-			error: function error(err) {
-				console.log('error loading data');
-				WindJSHelper.options.errorCallback(err) || console.log(err);
-				WindJSHelper.loadLocalData();
-			},
-			success: function success(data) {
-				WindJSHelper.data = data;
-				WindJSHelper.initWindy(data);
-			}
-		});
-	},
-
-	redraw: function redraw(overlay, params) {
-
-		if (!WindJSHelper.windy) {
-			WindJSHelper.loadWindData();
-			return;
-		}
-
-		if (WindJSHelper.timer) clearTimeout(WindJSHelper.timer);
-
-		WindJSHelper.timer = setTimeout(function () {
-
-			var bounds = WindJSHelper.map.getBounds();
-			var size = WindJSHelper.map.getSize();
-
-			// bounds, width, height, extent
-			WindJSHelper.windy.start([[0, 0], [size.x, size.y]], size.x, size.y, [[bounds._southWest.lng, bounds._southWest.lat], [bounds._northEast.lng, bounds._northEast.lat]]);
-		}, 750); // showing wind is delayed
-	},
-
-	initWindy: function initWindy(data) {
-
-		console.log(data);
-
-		// windy object
-		WindJSHelper.windy = new Windy({ canvas: WindJSHelper.canvasOverlay.canvas(), data: data });
-
-		// prepare context global var, start drawing
-		WindJSHelper.context = WindJSHelper.canvasOverlay.canvas().getContext('2d');
-		WindJSHelper.canvasOverlay.canvas().classList.add("wind-overlay");
-		WindJSHelper.canvasOverlay.redraw();
-
-		WindJSHelper.map.on('dragstart', WindJSHelper.windy.stop);
-		WindJSHelper.map.on('zoomstart', WindJSHelper.clearWind);
-		WindJSHelper.map.on('resize', WindJSHelper.clearWind);
-
-		this.initMouseHandler();
-	},
-
-	initMouseHandler: function initMouseHandler() {
-		if (!WindJSHelper.mouseControl && WindJSHelper.options.displayValues) {
-			WindJSHelper.mouseControl = L.control.windPosition(WindJSHelper.displayOptions || {}).addTo(WindJSHelper.map);
-		}
-	},
-
-	clearWind: function clearWind() {
-		if (WindJSHelper.windy) WindJSHelper.windy.stop();
-		if (WindJSHelper.context) WindJSHelper.context.clearRect(0, 0, 3000, 3000);
-	},
-
-	destroyWind: function destroyWind() {
-		if (WindJSHelper.timer) clearTimeout(WindJSHelper.timer);
-		if (WindJSHelper.windy) WindJSHelper.windy.stop();
-		if (WindJSHelper.context) WindJSHelper.context.clearRect(0, 0, 3000, 3000);
-		if (WindJSHelper.mouseControl) WindJSHelper.map.removeControl(WindJSHelper.mouseControl);
-		WindJSHelper.mouseControl = null;
-		WindJSHelper.windy = null;
-		WindJSHelper.map.removeLayer(WindJSHelper.canvasOverlay);
-	}
-
-};
-
-WindJSHelper.canvasOverlay = L.canvasOverlay().drawing(WindJSHelper.redraw);
 (function (root, factory) {
 	if ((typeof exports === 'undefined' ? 'undefined' : _typeof(exports)) === 'object') {
 
@@ -900,15 +765,46 @@ WindJSHelper.canvasOverlay = L.canvasOverlay().drawing(WindJSHelper.redraw);
 
 	'use strict';
 
-	var WindJSLeaflet = function WindJSLeaflet(options) {
+	var WindJSLeaflet = {
 
-		// don't bother setting up if the service is unavailable
-		checkWind(options).then(function () {
-			WindJSHelper.init(options);
-			options.layerControl.addOverlay(WindJSHelper.canvasOverlay, 'wind');
-		}).catch(function (err) {
-			options.errorCallback(err);
-		});
+		_map: null,
+		_data: null,
+		_options: null,
+		_canvasOverlay: null,
+		_windy: null,
+		_context: null,
+		_timer: 0,
+		_mouseControl: null,
+
+		init: function init(options) {
+
+			// don't bother setting up if the service is unavailable
+			this._checkWind(options).then(function () {
+
+				// set properties
+				WindJSLeaflet._map = options.map;
+				WindJSLeaflet._options = options;
+
+				// create canvas, add overlay control
+				WindJSLeaflet._canvasOverlay = L.canvasOverlay().drawing(WindJSLeaflet._redraw);
+				WindJSLeaflet._options.layerControl.addOverlay(WindJSLeaflet._canvasOverlay, 'wind');
+
+				// ensure clean up on deselect overlay
+				WindJSLeaflet._map.on('overlayremove', function (e) {
+					if (e.layer == WindJSLeaflet.__canvasOverlay) {
+						WindJSHelper._destroyWind();
+					}
+				});
+			}).catch(function (err) {
+				WindJSLeaflet._options.errorCallback(err);
+			});
+		},
+
+		setTime: function setTime(timeIso) {
+			WindJSLeaflet._options.timeISO = timeIso;
+		},
+
+		/*------------------------------------ PRIVATE ------------------------------------------*/
 
 		/**
    * Ping the test endpoint to check if wind server is available
@@ -916,7 +812,7 @@ WindJSHelper.canvasOverlay = L.canvasOverlay().drawing(WindJSHelper.redraw);
    * @param options
    * @returns {Promise}
    */
-		function checkWind(options) {
+		_checkWind: function _checkWind(options) {
 
 			return new Promise(function (resolve, reject) {
 
@@ -933,11 +829,116 @@ WindJSHelper.canvasOverlay = L.canvasOverlay().drawing(WindJSHelper.redraw);
 					}
 				});
 			});
-		}
-	};
+		},
 
-	WindJSLeaflet.prototype.setTime = function (timeIso) {
-		WindJSHelper.options.timeISO = timeIso;
+		_getRequestUrl: function _getRequestUrl() {
+
+			if (!this._options.useNearest) {
+				return this._options.latestUrl;
+			}
+
+			var params = {
+				"timeIso": this._options.timeISO || new Date().toISOString(),
+				"searchLimit": this._options.nearestDaysLimit || 7 // don't show data out by more than limit
+			};
+
+			return this._options.nearestUrl + '?' + $.param(params);
+		},
+
+		_loadLocalData: function _loadLocalData() {
+
+			console.log('using local data..');
+
+			$.getJSON('demo.json', function (data) {
+				WindJSLeaflet._data = data;
+				WindJSLeaflet._initWindy(data);
+			});
+		},
+
+		_loadWindData: function _loadWindData() {
+
+			if (this._options.localMode) {
+				this._loadLocalData();
+				return;
+			}
+
+			var request = this._getRequestUrl();
+			console.log(request);
+
+			$.ajax({
+				type: 'GET',
+				url: request,
+				error: function error(err) {
+					console.log('error loading data');
+					WindJSLeaflet._options.errorCallback(err) || console.log(err);
+					WindJSLeaflet._loadLocalData();
+				},
+				success: function success(data) {
+					WindJSLeaflet._data = data;
+					WindJSLeaflet._initWindy(data);
+				}
+			});
+		},
+
+		_redraw: function _redraw(overlay, params) {
+
+			if (!WindJSLeaflet._windy) {
+				WindJSLeaflet._loadWindData();
+				return;
+			}
+
+			if (this._timer) clearTimeout(WindJSLeaflet._timer);
+
+			this._timer = setTimeout(function () {
+
+				var bounds = WindJSLeaflet._map.getBounds();
+				var size = WindJSLeaflet._map.getSize();
+
+				// bounds, width, height, extent
+				WindJSLeaflet._windy.start([[0, 0], [size.x, size.y]], size.x, size.y, [[bounds._southWest.lng, bounds._southWest.lat], [bounds._northEast.lng, bounds._northEast.lat]]);
+			}, 750); // showing wind is delayed
+		},
+
+		_initWindy: function _initWindy(data) {
+
+			console.log(data);
+
+			// windy object
+			this._windy = new Windy({ canvas: WindJSLeaflet._canvasOverlay._canvas, data: data });
+
+			// prepare context global var, start drawing
+			this._context = this._canvasOverlay._canvas.getContext('2d');
+			this._canvasOverlay._canvas.classList.add("wind-overlay");
+			this._canvasOverlay._redraw();
+
+			this._map.on('dragstart', WindJSLeaflet._windy.stop);
+			this._map.on('zoomstart', WindJSLeaflet._clearWind);
+			this._map.on('resize', WindJSLeaflet._clearWind);
+
+			this._initMouseHandler();
+		},
+
+		_initMouseHandler: function _initMouseHandler() {
+			if (!this._mouseControl && this._options.displayValues) {
+				this._mouseControl = L.control.windPosition(this._options.displayOptions || {}).addTo(this._map);
+			}
+		},
+
+		_clearWind: function _clearWind() {
+			if (this._windy) this._windy.stop();
+			if (this._context) this._context.clearRect(0, 0, 3000, 3000);
+		},
+
+		_destroyWind: function _destroyWind() {
+			if (this._timer) clearTimeout(this._timer);
+			if (this._windy) this._windy.stop();
+			if (this._context) this._context.clearRect(0, 0, 3000, 3000);
+			if (this._mouseControl) this.map.removeControl(this._mouseControl);
+			this._mouseControl = null;
+			this._windy = null;
+			this._map.removeLayer(this._canvasOverlay);
+		}
+
 	};
 
 	return WindJSLeaflet;

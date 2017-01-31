@@ -17,16 +17,48 @@
 
 	'use strict';
 
-	var WindJSLeaflet = function(options) {
+	var WindJSLeaflet = {
 
-		// don't bother setting up if the service is unavailable
-		checkWind(options).then(function() {
-			WindJSHelper.init(options);
-			options.layerControl.addOverlay(WindJSHelper.canvasOverlay, 'wind');
+		_map: null,
+		_data: null,
+		_options: null,
+		_canvasOverlay: null,
+		_windy: null,
+		_context: null,
+		_timer: 0,
+		_mouseControl: null,
+		
+		init: function (options) {
+			
+			// don't bother setting up if the service is unavailable
+			this._checkWind(options).then(function () {
 
-		}).catch(function (err) {
-			options.errorCallback(err);
-		});
+				// set properties
+				WindJSLeaflet._map = options.map;
+				WindJSLeaflet._options = options;
+
+				// create canvas, add overlay control
+				WindJSLeaflet._canvasOverlay = L.canvasOverlay().drawing(WindJSLeaflet._redraw);
+				WindJSLeaflet._options.layerControl.addOverlay(WindJSLeaflet._canvasOverlay, 'wind');
+
+				// ensure clean up on deselect overlay
+				WindJSLeaflet._map.on('overlayremove', function (e) {
+					if (e.layer == WindJSLeaflet.__canvasOverlay) {
+						WindJSHelper._destroyWind();
+					}
+				});
+
+			}).catch(function (err) {
+				WindJSLeaflet._options.errorCallback(err);
+			});
+
+		},
+
+		setTime: function (timeIso) {
+			WindJSLeaflet._options.timeISO = timeIso;
+		},
+
+		/*------------------------------------ PRIVATE ------------------------------------------*/
 
 		/**
 		 * Ping the test endpoint to check if wind server is available
@@ -34,7 +66,7 @@
 		 * @param options
 		 * @returns {Promise}
 		 */
-		function checkWind(options) {
+		_checkWind: function (options) {
 
 			return new Promise(function (resolve, reject) {
 
@@ -51,12 +83,119 @@
 					}
 				});
 			});
-		}
-	};
+		},
 
-	WindJSLeaflet.prototype.setTime = function (timeIso) {
-		WindJSHelper.options.timeISO = timeIso;
+		_getRequestUrl: function() {
+
+			if(!this._options.useNearest) {
+				return this._options.latestUrl;
+			}
+
+			var params = {
+				"timeIso": this._options.timeISO || new Date().toISOString(),
+				"searchLimit": this._options.nearestDaysLimit || 7 // don't show data out by more than limit
+			};
+
+			return this._options.nearestUrl + '?' + $.param(params);
+		},
+
+		_loadLocalData: function() {
+
+			console.log('using local data..');
+
+			$.getJSON('demo.json', function (data) {
+				WindJSLeaflet._data = data;
+				WindJSLeaflet._initWindy(data);
+			});
+		},
+
+		_loadWindData: function() {
+
+			if(this._options.localMode) {
+				this._loadLocalData();
+				return;
+			}
+
+			var request = this._getRequestUrl();
+			console.log(request);
+
+			$.ajax({
+				type: 'GET',
+				url: request,
+				error: function error(err) {
+					console.log('error loading data');
+					WindJSLeaflet._options.errorCallback(err) || console.log(err);
+					WindJSLeaflet._loadLocalData();
+				},
+				success: function success(data) {
+					WindJSLeaflet._data = data;
+					WindJSLeaflet._initWindy(data);
+				}
+			});
+		},
+
+		_redraw: function(overlay, params) {
+
+			if (!WindJSLeaflet._windy) {
+				WindJSLeaflet._loadWindData();
+				return;
+			}
+
+			if (this._timer) clearTimeout(WindJSLeaflet._timer);
+
+			this._timer = setTimeout(function () {
+
+				var bounds = WindJSLeaflet._map.getBounds();
+				var size = WindJSLeaflet._map.getSize();
+
+				// bounds, width, height, extent
+				WindJSLeaflet._windy.start([[0, 0], [size.x, size.y]], size.x, size.y, [[bounds._southWest.lng, bounds._southWest.lat], [bounds._northEast.lng, bounds._northEast.lat]]);
+			}, 750); // showing wind is delayed
+		},
+
+
+		_initWindy: function(data) {
+
+			console.log(data);
+
+			// windy object
+			this._windy = new Windy({ canvas: WindJSLeaflet._canvasOverlay._canvas, data: data });
+
+			// prepare context global var, start drawing
+			this._context = this._canvasOverlay._canvas.getContext('2d');
+			this._canvasOverlay._canvas.classList.add("wind-overlay");
+			this._canvasOverlay._redraw();
+
+			this._map.on('dragstart', WindJSLeaflet._windy.stop);
+			this._map.on('zoomstart', WindJSLeaflet._clearWind);
+			this._map.on('resize', WindJSLeaflet._clearWind);
+
+			this._initMouseHandler();
+		},
+
+		_initMouseHandler: function() {
+			if (!this._mouseControl && this._options.displayValues) {
+				this._mouseControl = L.control.windPosition(this._options.displayOptions || {}).addTo(this._map);
+			}
+		},
+
+		_clearWind: function() {
+			if (this._windy) this._windy.stop();
+			if (this._context) this._context.clearRect(0, 0, 3000, 3000);
+		},
+
+		_destroyWind: function() {
+			if (this._timer) clearTimeout(this._timer);
+			if (this._windy) this._windy.stop();
+			if (this._context) this._context.clearRect(0, 0, 3000, 3000);
+			if (this._mouseControl) this.map.removeControl(this._mouseControl);
+			this._mouseControl = null;
+			this._windy = null;
+			this._map.removeLayer(this._canvasOverlay);
+		}
+		
 	};
+	
 
 	return WindJSLeaflet;
 
