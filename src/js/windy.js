@@ -112,9 +112,12 @@ var Windy = function (params) {
 	 * Get interpolated grid value from Lon/Lat position
 	 * @param λ {Float} Longitude
 	 * @param φ {Float} Latitude
-	 * @returns {null}
+	 * @returns {Object}
 	 */
 	var interpolate = function(λ, φ) {
+
+		if(!grid) return null;
+
 		var i = floorMod(λ - λ0, 360) / Δλ;  // calculate longitude index in wrapped range [0, 360)
 		var j = (φ0 - φ) / Δφ;                 // calculate latitude index in direction +90 to -90
 

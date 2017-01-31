@@ -1,54 +1,63 @@
-var WindJSLeaflet = function(options){
+(function (root, factory) {
+	if (typeof exports === 'object') {
 
-	// don't bother setting up if the service is unavailable
-    checkWind(options).then(function(){
+		// CommonJS
+		module.exports = factory(require('wind-js-leaflet'));
 
-	    console.log('check wind success');
+	} else if (typeof define === 'function' && define.amd) {
+		// AMD
+		define(['wind-js-leaflet'], function (WindJSLeaflet) {
+			return (root.returnExportsGlobal = factory(window));
+		});
+	} else {
+		// Global Variables
+		window.WindJSLeaflet = factory(window);
+	}
+}(this, function (window) {
 
-	    WindJSHelper.init(options);
-        options.layerControl.addOverlay(WindJSHelper.canvasOverlay, 'wind');
+	'use strict';
 
-    }).catch(function(err){
-        console.log('check wind failed..');
-        options.errorCallback(err);
-    });
+	var WindJSLeaflet = function(options) {
 
-    /**
-     * Ping the test endpoint to check if wind server is available
-     *
-     * @param options
-     * @returns {Promise}
-     */
-    function checkWind(options){
+		// don't bother setting up if the service is unavailable
+		checkWind(options).then(function() {
+			WindJSHelper.init(options);
+			options.layerControl.addOverlay(WindJSHelper.canvasOverlay, 'wind');
 
-        return new Promise((resolve, reject) => {
+		}).catch(function (err) {
+			options.errorCallback(err);
+		});
 
-	        if(options.localMode) resolve(true);
+		/**
+		 * Ping the test endpoint to check if wind server is available
+		 *
+		 * @param options
+		 * @returns {Promise}
+		 */
+		function checkWind(options) {
 
-            $.ajax({
-                type: 'GET',
-                url: options.pingUrl,
-                data: {
-                    format: 'json'
-                },
-                error: function(err) {
-                    reject(err);
-                },
-                success: function(data) {
-                    resolve(data);
-                }
-            });
+			return new Promise(function (resolve, reject) {
 
-        });
+				if (options.localMode) resolve(true);
 
-    }
+				$.ajax({
+					type: 'GET',
+					url: options.pingUrl,
+					error: function error(err) {
+						reject(err);
+					},
+					success: function success(data) {
+						resolve(data);
+					}
+				});
+			});
+		}
+	};
 
-};
+	WindJSLeaflet.prototype.setTime = function (timeIso) {
+		WindJSHelper.options.timeISO = timeIso;
+	};
 
-WindJSLeaflet.prototype.setTime = function(timeIso){
-	WindJSHelper.options.timeISO = timeIso;
-};
+	return WindJSLeaflet;
 
-
-
-
+}));
