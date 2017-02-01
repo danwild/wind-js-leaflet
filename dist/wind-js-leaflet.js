@@ -805,21 +805,18 @@ L.control.windPosition = function (options) {
 			// don't bother setting up if the service is unavailable
 			WindJSLeaflet._checkWind(options).then(function () {
 
-				console.log('_checkWind returned..');
-
 				// set properties
 				WindJSLeaflet._map = options.map;
 				WindJSLeaflet._options = options;
 
 				// create canvas, add overlay control
 				WindJSLeaflet._canvasLayer = L.canvasLayer().delegate(WindJSLeaflet);
-
 				WindJSLeaflet._options.layerControl.addOverlay(WindJSLeaflet._canvasLayer, 'wind');
 
 				// ensure clean up on deselect overlay
 				WindJSLeaflet._map.on('overlayremove', function (e) {
-					if (e.layer == WindJSLeaflet.__canvasLayer) {
-						WindJSHelper._destroyWind();
+					if (e.layer == WindJSLeaflet._canvasLayer) {
+						WindJSLeaflet._destroyWind();
 					}
 				});
 			}).catch(function (err) {
@@ -958,10 +955,13 @@ L.control.windPosition = function (options) {
 		},
 
 		_destroyWind: function _destroyWind() {
+
+			console.log('_destroyWind');
+
 			if (this._timer) clearTimeout(this._timer);
 			if (this._windy) this._windy.stop();
 			if (this._context) this._context.clearRect(0, 0, 3000, 3000);
-			if (this._mouseControl) this.map.removeControl(this._mouseControl);
+			if (this._mouseControl) this._map.removeControl(this._mouseControl);
 			this._mouseControl = null;
 			this._windy = null;
 			this._map.removeLayer(this._canvasLayer);
