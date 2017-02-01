@@ -955,9 +955,6 @@ L.control.windPosition = function (options) {
 		},
 
 		_destroyWind: function _destroyWind() {
-
-			console.log('_destroyWind');
-
 			if (this._timer) clearTimeout(this._timer);
 			if (this._windy) this._windy.stop();
 			if (this._context) this._context.clearRect(0, 0, 3000, 3000);
