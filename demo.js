@@ -45,7 +45,7 @@ var handleError = function(err){
 };
 
 // wind-js-leaflet
-var windJSLeaflet = new WindJSLeaflet({
+var windJSLeaflet = new WindJSLeaflet.init({
 	localMode: true,
 	map: map,
 	layerControl: layerControl,
