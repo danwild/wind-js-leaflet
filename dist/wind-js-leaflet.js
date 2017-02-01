@@ -731,8 +731,8 @@ L.Control.WindPosition = L.Control.extend({
 	_onMouseMove: function _onMouseMove(e) {
 
 		var self = this;
-		var pos = WindJSLeaflet._map.containerPointToLatLng(L.point(e.containerPoint.x, e.containerPoint.y));
-		var gridValue = WindJSLeaflet._windy.interpolatePoint(pos.lng, pos.lat);
+		var pos = this.options.WindJSLeaflet._map.containerPointToLatLng(L.point(e.containerPoint.x, e.containerPoint.y));
+		var gridValue = this.options.WindJSLeaflet._windy.interpolatePoint(pos.lng, pos.lat);
 		var htmlOut = "";
 
 		if (gridValue && !isNaN(gridValue[0]) && !isNaN(gridValue[1]) && gridValue[2]) {
@@ -803,7 +803,7 @@ L.control.windPosition = function (options) {
 		init: function init(options) {
 
 			// don't bother setting up if the service is unavailable
-			this._checkWind(options).then(function () {
+			WindJSLeaflet._checkWind(options).then(function () {
 
 				console.log('_checkWind returned..');
 
@@ -935,7 +935,6 @@ L.control.windPosition = function (options) {
 			// prepare context global var, start drawing
 			this._context = this._canvasLayer._canvas.getContext('2d');
 			this._canvasLayer._canvas.classList.add("wind-overlay");
-			//this._canvasLayer.onDrawLayer();
 			this.onDrawLayer();
 
 			this._map.on('dragstart', WindJSLeaflet._windy.stop);
@@ -947,7 +946,9 @@ L.control.windPosition = function (options) {
 
 		_initMouseHandler: function _initMouseHandler() {
 			if (!this._mouseControl && this._options.displayValues) {
-				this._mouseControl = L.control.windPosition(this._options.displayOptions || {}).addTo(this._map);
+				var options = this._options.displayOptions || {};
+				options['WindJSLeaflet'] = WindJSLeaflet;
+				this._mouseControl = L.control.windPosition(options).addTo(this._map);
 			}
 		},
 

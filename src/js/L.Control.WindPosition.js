@@ -33,8 +33,8 @@ L.Control.WindPosition = L.Control.extend({
     _onMouseMove: function (e) {
 
         var self = this;
-	    var pos = WindJSLeaflet._map.containerPointToLatLng(L.point(e.containerPoint.x, e.containerPoint.y));
-	    var gridValue = WindJSLeaflet._windy.interpolatePoint(pos.lng, pos.lat);
+	    var pos = this.options.WindJSLeaflet._map.containerPointToLatLng(L.point(e.containerPoint.x, e.containerPoint.y));
+	    var gridValue = this.options.WindJSLeaflet._windy.interpolatePoint(pos.lng, pos.lat);
 	    var htmlOut = "";
 
 	    if(gridValue && !isNaN(gridValue[0]) && !isNaN(gridValue[1]) && gridValue[2]){

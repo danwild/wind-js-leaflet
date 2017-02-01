@@ -3,7 +3,7 @@ A plugin for Leaflet to add visualisation overlay of wind direction, wind veloci
 To use this plugin, you will need to run your own [wind-js-server](https://github.com/danwild/wind-js-server) instance.
 The data is 1 degree, 6 hourly data from [NOAA](http://nomads.ncep.noaa.gov/).
 
-## Version 2.0.0, breaking changes
+## v2 Breaking Changes
 Now supports both leaflet version `0.7.7` and `1.0.3`.
 However this update brings one breaking change - how you initialise the plugin.
 
@@ -48,9 +48,9 @@ displayOptions: {
    displayEmptyString: 'No wind data'           // what to display in mouseover control when no data
 },
 overlayName: 'wind',                            // string to display for the overlay in your layer control
-pingUrl: 'http://localhost:7000/alive/',        // url to check service availability
-latestUrl: 'http://localhost:7000/latest/',     // url to get latest data with no required params   
-nearestUrl: 'http://localhost:7000/nearest/',   // url to get data nearest a specified time ISO
+pingUrl: 'http://localhost:7000/alive',        // url to check service availability
+latestUrl: 'http://localhost:7000/latest',     // url to get latest data with no required params   
+nearestUrl: 'http://localhost:7000/nearest',   // url to get data nearest a specified time ISO
 errorCallback: handleError                      // callback function to get called on error
 ```
 

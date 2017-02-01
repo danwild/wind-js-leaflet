@@ -31,7 +31,7 @@
 		init: function (options) {
 			
 			// don't bother setting up if the service is unavailable
-			this._checkWind(options).then(function() {
+			WindJSLeaflet._checkWind(options).then(function() {
 
 				console.log('_checkWind returned..');
 
@@ -176,7 +176,6 @@
 			// prepare context global var, start drawing
 			this._context = this._canvasLayer._canvas.getContext('2d');
 			this._canvasLayer._canvas.classList.add("wind-overlay");
-			//this._canvasLayer.onDrawLayer();
 			this.onDrawLayer();
 
 			this._map.on('dragstart', WindJSLeaflet._windy.stop);
@@ -188,7 +187,9 @@
 
 		_initMouseHandler: function() {
 			if (!this._mouseControl && this._options.displayValues) {
-				this._mouseControl = L.control.windPosition(this._options.displayOptions || {}).addTo(this._map);
+				var options = this._options.displayOptions || {};
+				options['WindJSLeaflet'] = WindJSLeaflet;
+				this._mouseControl = L.control.windPosition(options).addTo(this._map);
 			}
 		},
 
