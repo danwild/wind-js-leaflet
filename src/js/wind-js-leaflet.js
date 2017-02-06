@@ -164,7 +164,6 @@
 			}, 750); // showing wind is delayed
 		},
 
-
 		_initWindy: function(data) {
 
 			// windy object
