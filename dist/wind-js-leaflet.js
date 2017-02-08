@@ -811,7 +811,7 @@ L.control.windPosition = function (options) {
 
 				// create canvas, add overlay control
 				WindJSLeaflet._canvasLayer = L.canvasLayer().delegate(WindJSLeaflet);
-				WindJSLeaflet._options.layerControl.addOverlay(WindJSLeaflet._canvasLayer, 'wind');
+				WindJSLeaflet._options.layerControl.addOverlay(WindJSLeaflet._canvasLayer, options.overlayName || 'wind');
 
 				// ensure clean up on deselect overlay
 				WindJSLeaflet._map.on('overlayremove', function (e) {
