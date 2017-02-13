@@ -3,6 +3,9 @@ A plugin for Leaflet to add visualisation overlay of wind direction, wind veloci
 To use this plugin, you will need to run your own [wind-js-server](https://github.com/danwild/wind-js-server) instance.
 The data is 1 degree, 6 hourly data from [NOAA](http://nomads.ncep.noaa.gov/).
 
+## leaflet-velocity released
+**Consider using [leaflet-velocity](https://github.com/danwild/leaflet-velocity) instead of `wind-js-leaflet`, as it is more flexible and up to date.**
+
 ## v2 Breaking Changes
 Now supports both leaflet version `0.7.7` and `1.0.3`.
 However this update brings one breaking change - how you initialise the plugin.
